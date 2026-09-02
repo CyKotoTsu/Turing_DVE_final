@@ -1,0 +1,69 @@
+{
+  "output_folder": "inits",
+  "yield_every": 100,
+  "yield_steps": 100,
+  "device": "cpu",
+  "dtype": "torch.float32",
+  "prolif_rate": 0,
+  "prolif_delay": 0,
+  "max_cells": 10000,
+  "dt": 0.02,
+  "eta": 0.1,
+  "lambdas": [
+    [
+      0.2,
+      0.6,
+      0.0,
+      0.0
+    ],
+    [
+      0.1,
+      0.6,
+      0.0,
+      0.0
+    ],
+    [
+      0.1,
+      0.5,
+      0.3,
+      0.0
+    ],
+    [
+      0.6,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.6,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.1,
+      0.7,
+      0.0,
+      0.0
+    ]
+  ],
+  "offsets": [
+    -0.5,
+    -1.5,
+    -1.5,
+    -1,
+    -1,
+    -1
+  ],
+  "egg_shape": [
+    9.74889707894483,
+    9.74889707894483,
+    19.49779415788966
+  ],
+  "z_wall_k": 0,
+  "ceiling_z": 0,
+  "push": 0,
+  "notes": "Running test w. bounds",
+  "random_seed": 42,
+  "init_number": "_full_42"
+}
