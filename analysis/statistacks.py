@@ -22,11 +22,8 @@ def plot_v (file, window_size):
         dve_x_i = x_lst[i][dve_indices]
         dve_x_i_1 = x_lst[i+1][dve_indices]
 
-        # Calculate velocity
-        v_i = dve_x_i_1 - dve_x_i
-
-        # average over all dve cells
-        v_i = np.mean(v_i)
+        # Mean Euclidean speed over DVE cells (scalar)
+        v_i = np.mean(np.linalg.norm(dve_x_i_1 - dve_x_i, axis=1))
         v_lst.append(v_i)
     
     if window_size is not None:
