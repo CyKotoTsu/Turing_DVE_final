@@ -418,9 +418,9 @@ class Simulation:
 
         # Cell positions and polarities are updated according to overdamped langevin dynamics. 
         with torch.no_grad():
-            x += -x.grad * self.dt + self.eta * torch.empty(*x.shape, dtype=self.dtype, device=self.device).normal_() * self.sqrt_dt
             # For type2 cells add additional force
             x[p_mask==2] += -self.push*q[p_mask==2]*self.dt
+            x += -x.grad * self.dt + self.eta * torch.empty(*x.shape, dtype=self.dtype, device=self.device).normal_() * self.sqrt_dt
             p += -p.grad * self.dt + self.eta * torch.empty(*p.shape, dtype=self.dtype, device=self.device).normal_() * self.sqrt_dt
             q += -q.grad * self.dt + self.eta * torch.empty(*q.shape, dtype=self.dtype, device=self.device).normal_() * self.sqrt_dt
 
