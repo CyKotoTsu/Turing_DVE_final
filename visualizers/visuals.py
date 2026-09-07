@@ -570,22 +570,44 @@ def unwrap_grad3(file,cell_type, include, timepoints, if_w):
 
 
 # Napari animation
-def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
+def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20, mRNA =  False, a_dkk = 720, a_wnt = 70, p_dkk = 60, hc = 2):
     # load file
- 
-    if if_U:
+    if if_U or mRNA:
         with open(file , 'rb') as f:
-            p_mask_lst, x_lst, p_lst, q_lst, U_lst = pickle.load(f)  
+            p_mask_lst, x_lst, p_lst, q_lst, U_lst = pickle.load(f)
     else:
         with open(file , 'rb') as f:
-            p_mask_lst, x_lst, p_lst, q_lst = pickle.load(f) 
-         
+            p_mask_lst, x_lst, p_lst, q_lst = pickle.load(f)
+
 
     # --- inputs you already have ---
-    # x_lst: list/array length T, each (N,2)
-    # U_lst: list/array length T, each (N,2) (or at least [:,1] exists)
+    # x_lst: list/array length T, each (N,3)
+    # U_lst: list/array length T, each (N,2)  columns: DKK, Wnt
     # p_mask_lst: list/array length T, each (N,) int mask
-    # q_lst: list/array length T, each (N,2) vector for each point
+    # q_lst: list/array length T, each (N,3) vector for each point
+
+    def mrna_production(U, p_mask):
+        """Production rates matching model_RT (Wnt activates, DKK represses)."""
+        dkk = U[:, 0]
+        wnt = U[:, 1]
+        hill = (wnt ** hc) / (1.0 + wnt ** hc + dkk ** hc)
+        if morph == 0:
+            prod = a_dkk * hill
+            prod = np.asarray(prod, dtype=float).copy()
+            prod[np.asarray(p_mask) == 2] += p_dkk
+            return prod
+        return a_wnt * hill
+
+    def color_values(t):
+        if mRNA:
+            return mrna_production(U_lst[t], p_mask_lst[t])
+        return U_lst[t][:, morph]
+
+    def set_layer_colors(layer, values):
+        name = morph_list[morph]
+        layer.properties = {name: values}
+        layer.face_color = name
+        layer.face_contrast_limits = (vmin, vmax)
 
     T = len(x_lst)
     cell_type_mode = (morph == -1)
@@ -595,9 +617,15 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
     viewer.theme = "light"
     anim = Animation(viewer)
     # global fixed color range across the whole animation
-    vmin =0
-    if if_U:
-        vmax = max(np.max(u[:, morph]) for u in U_lst) if not cell_type_mode else 1
+    vmin = 0
+    if cell_type_mode:
+        vmax = 1
+    elif mRNA:
+        vmax = max(np.max(mrna_production(u, p_mask_lst[i])) for i, u in enumerate(U_lst))
+        vmax = max(float(vmax), 1e-8)
+    elif if_U:
+        vmax = max(np.max(u[:, morph]) for u in U_lst)
+        vmax = max(float(vmax), 1e-8)
 
 
     d_angle = 0   # degrees per frame (tune this if you want the camera to rotate consistently)
@@ -614,7 +642,7 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
     if cell_type_mode:
         b0 = None
     else:
-        b0 = U_lst[t][:, morph]
+        b0 = color_values(t)
 
 
     m0 = p_mask_lst[t]
@@ -634,6 +662,37 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
             size=3,
             name="VE",
             face_color='gray',
+        )
+    elif mRNA:
+        cmap = "viridis" if morph != 0 else "plasma"
+        epi_cells = viewer.add_points(
+            x0[m0==0],
+            size=3,
+            name="Epi",
+            properties={morph_list[morph]: b0[m0==0]},
+            face_color=morph_list[morph],
+            face_colormap=cmap,
+            face_contrast_limits=(vmin, vmax),
+        )
+
+        ve_cells = viewer.add_points(
+            x0[m0==1],
+            size=3,
+            name="VE",
+            properties={morph_list[morph]: b0[m0==1]},
+            face_color=morph_list[morph],
+            face_colormap=cmap,
+            face_contrast_limits=(vmin, vmax),
+        )
+
+        dve = viewer.add_points(
+            x0[m0==2],
+            size=3,
+            name="DVE",
+            properties={morph_list[morph]: b0[m0==2]},
+            face_color=morph_list[morph],
+            face_colormap=cmap,
+            face_contrast_limits=(vmin, vmax),
         )
     else:
         epi_cells = viewer.add_points(
@@ -657,12 +716,13 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
         )
 
 
-    dve = viewer.add_points(
-        x0[m0 == 2],
-        size=3,
-        name="DVE",
-        face_color="#F24464",
-    )
+    if not mRNA:
+        dve = viewer.add_points(
+            x0[m0 == 2],
+            size=3,
+            name="DVE",
+            face_color="#F24464",
+        )
 
 
     # vectors layer expects (M, 2, D): [ [start, end], ... ]
@@ -701,17 +761,22 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
         if cell_type_mode:
             epi_cells.data = x[m==0]
             ve_cells.data = x[(m!=0) & (m!=2)]
+
+        elif mRNA:
+            b = color_values(t)
+            epi_cells.data = x[m==0]
+            set_layer_colors(epi_cells, b[m==0])
+            ve_cells.data = x[m==1]
+            set_layer_colors(ve_cells, b[m==1])
+            dve.data = x[m==2]
+            set_layer_colors(dve, b[m==2])
         else:
             epi_cells.data = x[m==0]
-            epi_cells.properties = {morph_list[morph]: b[m==0]}
-            # keep range fixed (sometimes useful to re-assert)
-            epi_cells.face_contrast_limits = (vmin, vmax)
-
+            set_layer_colors(epi_cells, b[m==0])
             ve_cells.data = x[m!=0]
-            ve_cells.properties = {morph_list[morph]: b[m!=0]}
-            # keep range fixed (sometimes useful to re-assert)
-            ve_cells.face_contrast_limits = (vmin, vmax)
-        dve.data = x[m == 2]
+            set_layer_colors(ve_cells, b[m!=0])
+        if not mRNA:
+            dve.data = x[m == 2]
 
         vecs.data = np.stack([x[m==2], -vec_scale * q[m==2]], axis=1)
         vecs1.data = np.stack([x[m!=0], -vec_scale * p[m!=0]], axis=1)
