@@ -582,10 +582,10 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
          
 
     # --- inputs you already have ---
-    # x_lst: list/array length T, each (N,3)
-    # U_lst: list/array length T, each (N,3) (or at least [:,2] exists)
+    # x_lst: list/array length T, each (N,2)
+    # U_lst: list/array length T, each (N,2) (or at least [:,1] exists)
     # p_mask_lst: list/array length T, each (N,) int mask
-    # q_lst: list/array length T, each (N,3) vector for each point
+    # q_lst: list/array length T, each (N,2) vector for each point
 
     T = len(x_lst)
     cell_type_mode = (morph == -1)
@@ -621,7 +621,7 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
     q0 = q_lst[t]
     p0 = p_lst[t]
     if not cell_type_mode:
-        morph_list = ['BMP','DKK','Wnt']
+        morph_list = ['DKK','Wnt']
     if cell_type_mode:
         epi_cells = viewer.add_points(
             x0[m0==0],
@@ -642,7 +642,7 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
             name="Epi",
             properties={morph_list[morph]: b0[m0==0]},
             face_color=morph_list[morph],
-            face_colormap="viridis" if morph != 1 else "plasma",
+            face_colormap="viridis" if morph != 0 else "plasma",
             face_contrast_limits=(vmin, vmax),
         )
 
@@ -652,7 +652,7 @@ def animate(file, if_U = False, morph = 2, cam_angle=(90,0,0), frame_t = 20):
             name="VE",
             properties={morph_list[morph]: b0[m0!=0]},
             face_color=morph_list[morph],
-            face_colormap="viridis" if morph != 1 else "plasma",
+            face_colormap="viridis" if morph != 0 else "plasma",
             face_contrast_limits=(vmin, vmax),
         )
 
