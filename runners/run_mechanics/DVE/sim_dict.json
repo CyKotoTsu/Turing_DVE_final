@@ -1,30 +1,30 @@
 {
-  "output_folder": "inits",
+  "output_folder": "DVE",
   "yield_every": 100,
-  "yield_steps": 200,
+  "yield_steps": 1000,
   "device": "cpu",
   "dtype": "torch.float32",
   "prolif_rate": 0,
   "prolif_delay": 0,
   "max_cells": 10000,
   "dt": 0.02,
-  "eta": 0.01,
+  "eta": 0.03,
   "lambdas": [
     [
       0,
-      0.7,
+      1,
       0.0,
       0.0
     ],
     [
       0.0,
-      0.6,
+      0.3,
       0.0,
       0.0
     ],
     [
       0.0,
-      0.8,
+      1,
       0.1,
       0.0
     ],
@@ -42,7 +42,7 @@
     ],
     [
       0.0,
-      0.7,
+      0.3,
       0.0,
       0.0
     ]
@@ -57,13 +57,12 @@
   ],
   "egg_shape": [
     8.74889707894483,
-    8.74889707894483,
-    19.49779415788966
+    8.74889707894483
   ],
   "z_wall_k": 10,
   "ceiling_z": 0,
-  "push": 0.0,
+  "push": 0.12,
   "notes": "Running test w. bounds",
   "random_seed": 42,
-  "init_number": "_cut_42_tube"
+  "init_number": "_dve_42_tube"
 }

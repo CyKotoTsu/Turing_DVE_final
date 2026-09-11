@@ -17,3 +17,6 @@ venv/
 # NPY
 .npy/
 
+# Change-log snapshots (dated html/jsonl logs are kept)
+change_logs/.snapshots/
+
